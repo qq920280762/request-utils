@@ -1,9 +1,9 @@
 'use strict';
 
 const HTTP = require('http');
-const QS = require('querystring');
+const QS   = require('querystring');
 
-const Client = module.exports = (params) =>{
+const Client = module.exports = (params) => {
     params = params || {};
 
     this.protocol = params.protocol || HTTP;
@@ -23,14 +23,14 @@ const Client = module.exports = (params) =>{
  * @param body {object|string} 需要上传的数据
  * @returns {Promise}
  */
-Client.prototype.request = (options,body)=>{
-    return new Promise((resolve,reject)=>{
+Client.prototype.request = (options, body)=> {
+    return new Promise((resolve, reject)=> {
         let data = false;
         // Defaults
         options.hostname = options.hostname || options.host || this.host;
-        options.port = options.port || this.port;
-        options.headers = options.headers || {};
-        if(options.expect) {
+        options.port     = options.port || this.port;
+        options.headers  = options.headers || {};
+        if (options.expect) {
             headers['Expect'] = "100-Continue";
         }
         options.path = options.path || '/';
@@ -53,7 +53,8 @@ Client.prototype.request = (options,body)=>{
                     return;
                 }
 
-            } else {
+            }
+            else {
                 data = Buffer(body + "");
                 if (options.headers['Content-Type'])
                     options.headers['Content-Type'] = "text/palin";
@@ -63,13 +64,13 @@ Client.prototype.request = (options,body)=>{
         }
 
         const req = this.protocol.request(options);
-        req.on('error', (err) =>{
+        req.on('error', (err) => {
             reject(err);
         });
 
-        req.on('response', (res) =>{
+        req.on('response', (res) => {
             res.data = [];
-            res.on('data', function(trunk) {
+            res.on('data', function (trunk) {
                 res.data.push(trunk);
             });
 
@@ -84,63 +85,64 @@ Client.prototype.request = (options,body)=>{
                         return;
                     }
                 }
-
-                resolve(null, res);
+                resolve(res);
             });
         });
 
         if (data) {
             if (options.expect) {
-                req.on('continue', () =>{
+                req.on('continue', () => {
                     req.write(data);
                     req.end();
 
                 });
 
-            } else {
+            }
+            else {
                 req.write(data);
                 req.end();
             }
-        } else {
+        }
+        else {
             req.end();
         }
     });
 };
 
-Client.prototype.get = (path, options) =>{
+Client.prototype.get = (path, options) => {
     if (typeof options !== 'object') {
         options = {};
     }
-    options.path = path;
+    options.path   = path;
     options.method = "GET";
     return this.request(options, null);
 };
 
-Client.prototype.post = (path, body, options) =>{
+Client.prototype.post = (path, body, options) => {
     if (typeof options !== 'object') {
         options = {};
     }
-    options.path = path;
+    options.path   = path;
     options.method = "POST";
     return this.request(options, body);
 };
 
-Client.prototype.put = (path, body, options) =>{
+Client.prototype.put = (path, body, options) => {
     if (typeof options !== 'object') {
         options = {};
     }
 
-    options.path = path;
+    options.path   = path;
     options.method = "PUT";
     return this.request(options, body);
 };
 
-Client.prototype['delete'] = (path, options) =>{
+Client.prototype['delete'] = (path, options) => {
     if (typeof options !== 'object') {
         options = {};
     }
 
-    options.path = path;
+    options.path   = path;
     options.method = "DELETE";
     return this.request(options, null);
 };
