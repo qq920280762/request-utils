@@ -1,0 +1,26 @@
+{
+  "name": "request-utils",
+  "version": "1.0.1",
+  "description": "promise http or https",
+  "main": "index.js",
+  "dependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qq920280762/request-utils.git"
+  },
+  "keywords": [
+    "simple",
+    "http",
+    "or",
+    "https"
+  ],
+  "author": "sc_gongchao",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/qq920280762/request-utils/issues"
+  },
+  "homepage": "https://github.com/qq920280762/request-utils#readme"
+}
