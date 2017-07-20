@@ -1,6 +1,6 @@
 {
   "name": "request-utils",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "promise http or https",
   "main": "index.js",
   "dependencies": {},

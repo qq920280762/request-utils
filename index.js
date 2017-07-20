@@ -68,17 +68,17 @@ Client.prototype.request = (options,body)=>{
         });
 
         req.on('response', (res) =>{
-
-            res.data = "";
-            res.on('data', function(d) {
-                res.data += d.toString('utf8');
+            res.data = [];
+            res.on('data', function(trunk) {
+                res.data.push(trunk);
             });
 
             res.on('end', ()=> {
+                res.data = Buffer.concat(res.data);
                 if (res.headers && res.headers['content-type']
                     && res.headers['content-type'].split(/;/g)[0] === "application/json") {
                     try {
-                        res.body = JSON.parse(res.data);
+                        res.body = JSON.parse(res.data.toString('utf8'));
                     } catch (e) {
                         reject(e);
                         return;
