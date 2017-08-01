@@ -3,7 +3,8 @@
 const HTTP = require('http');
 const QS   = require('querystring');
 
-const Client = module.exports = (params) => {
+function Client(params){
+
     params = params || {};
 
     this.protocol = params.protocol || HTTP;
@@ -146,3 +147,5 @@ Client.prototype['delete'] = (path, options) => {
     options.method = "DELETE";
     return this.request(options, null);
 };
+
+module.exports = Client;
