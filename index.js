@@ -3,149 +3,156 @@
 const HTTP = require('http');
 const QS   = require('querystring');
 
-function Client(params){
+class Client {
 
-    params = params || {};
+    constructor(params) {
 
-    this.protocol = params.protocol || HTTP;
+        params = params || {};
 
-    this.host = params.host;
-    this.port = params.port;
-};
+        this.protocol = params.protocol || HTTP;
+        this.hostname = params.hostname;
+        this.host = params.host;
+        this.port = params.port;
+    };
 
-/**
- *
- * @param options
- *          -{string} [options.hostname] 主机名
- *          -{Number} [options.port] 端口 default:80
- *          -{object} [options.headers] 头部信息
- *          -{boolean} [options.expect] 是否使用 100-Continue 协议
- *          -{string} [options.path] 访问路径
- * @param body {object|string} 需要上传的数据
- * @returns {Promise}
- */
-Client.prototype.request = (options, body)=> {
-    return new Promise((resolve, reject)=> {
-        let data = false;
-        // Defaults
-        options.hostname = options.hostname || options.host || this.host;
-        options.port     = options.port || this.port;
-        options.headers  = options.headers || {};
-        if (options.expect) {
-            headers['Expect'] = "100-Continue";
-        }
-        options.path = options.path || '/';
-        if (options.query) {
-            options.path += '?' + QS.stringify(options.query);
-        }
-
-        if (body) {
-            if (typeof body === 'object') {
-                try {
-                    data = JSON.stringify(body, null, 2);
-                    data = Buffer(data);
-
-                    options.headers['Content-Type'] = "application/json";
-                    if (!options.headers['Accept'])
-                        options.headers['Accept'] = "application/json";
-
-                } catch (e) {
-                    reject(e);
-                    return;
-                }
-
+    /**
+     *
+     * @param options
+     *          -{string} [options.hostname] 主机名
+     *          -{Number} [options.port] 端口 default:80
+     *          -{object} [options.headers] 头部信息
+     *          -{boolean} [options.expect] 是否使用 100-Continue 协议
+     *          -{string} [options.path] 访问路径
+     * @param body {object|string} 需要上传的数据
+     * @returns {Promise}
+     */
+    request(options, body){
+        return new Promise((resolve, reject)=> {
+            let data = false;
+            // Defaults
+            options.hostname = options.hostname || this.hostname;
+            options.host     = options.host || this.host;
+            options.port     = options.port || this.port;
+            options.headers  = options.headers || {};
+            if (options.expect) {
+                headers['Expect'] = "100-Continue";
             }
-            else {
-                data = Buffer(body + "");
-                if (options.headers['Content-Type'])
-                    options.headers['Content-Type'] = "text/palin";
+            options.path = options.path || '/';
+            if (options.query) {
+                options.path += '?' + QS.stringify(options.query);
             }
 
-            options.headers['Content-Length'] = data.length;
-        }
-
-        const req = this.protocol.request(options);
-        req.on('error', (err) => {
-            reject(err);
-        });
-
-        req.on('response', (res) => {
-            res.data = [];
-            res.on('data', function (trunk) {
-                res.data.push(trunk);
-            });
-
-            res.on('end', ()=> {
-                res.data = Buffer.concat(res.data);
-                if (res.headers && res.headers['content-type']
-                    && res.headers['content-type'].split(/;/g)[0] === "application/json") {
+            if (body) {
+                if (typeof body === 'object') {
                     try {
-                        res.body = JSON.parse(res.data.toString('utf8'));
+                        data = JSON.stringify(body, null, 2);
+                        data = Buffer(data);
+
+                        options.headers['Content-Type'] = "application/json";
+                        if (!options.headers['Accept'])
+                            options.headers['Accept'] = "application/json";
+
                     } catch (e) {
                         reject(e);
                         return;
                     }
+
                 }
-                resolve(res);
+                else {
+                    data = Buffer(body + "");
+                    if (options.headers['Content-Type'])
+                        options.headers['Content-Type'] = "text/palin";
+                }
+
+                options.headers['Content-Length'] = data.length;
+            }
+
+            const req = this.protocol.request(options);
+            req.on('error', (err) => {
+                reject(err);
             });
-        });
 
-        if (data) {
-            if (options.expect) {
-                req.on('continue', () => {
-                    req.write(data);
-                    req.end();
-
+            req.on('response', (res) => {
+                res.data = [];
+                res.on('data', function (trunk) {
+                    res.data.push(trunk);
                 });
 
+                res.on('end', ()=> {
+                    res.data = Buffer.concat(res.data);
+                    if (res.headers && res.headers['content-type']
+                        && res.headers['content-type'].split(/;/g)[0] === "application/json") {
+                        try {
+                            res.body = JSON.parse(res.data.toString('utf8'));
+                        } catch (e) {
+                            reject(e);
+                            return;
+                        }
+                    }
+                    resolve(res);
+                });
+            });
+
+            if (data) {
+                if (options.expect) {
+                    req.on('continue', () => {
+                        req.write(data);
+                        req.end();
+
+                    });
+
+                }
+                else {
+                    req.write(data);
+                    req.end();
+                }
             }
             else {
-                req.write(data);
                 req.end();
             }
+        });
+    };
+
+    get(path, options){
+        if (typeof options !== 'object') {
+            options = {};
         }
-        else {
-            req.end();
+        options.path   = path;
+        options.method = "GET";
+        return this.request(options, null);
+    };
+
+    post(path, body, options){
+        if (typeof options !== 'object') {
+            options = {};
         }
-    });
-};
+        options.path   = path;
+        options.method = "POST";
+        return this.request(options, body);
+    };
 
-Client.prototype.get = (path, options) => {
-    if (typeof options !== 'object') {
-        options = {};
-    }
-    options.path   = path;
-    options.method = "GET";
-    return Client.request(options, null);
-};
+    put(path, body, options){
+        if (typeof options !== 'object') {
+            options = {};
+        }
 
-Client.prototype.post = (path, body, options) => {
-    if (typeof options !== 'object') {
-        options = {};
-    }
-    options.path   = path;
-    options.method = "POST";
-    return Client.request(options, body);
-};
+        options.path   = path;
+        options.method = "PUT";
+        return this.request(options, body);
+    };
 
-Client.prototype.put = (path, body, options) => {
-    if (typeof options !== 'object') {
-        options = {};
-    }
+    delete(path, options){
+        if (typeof options !== 'object') {
+            options = {};
+        }
 
-    options.path   = path;
-    options.method = "PUT";
-    return Client.request(options, body);
-};
+        options.path   = path;
+        options.method = "DELETE";
+        return this.request(options, null);
+    };
 
-Client.prototype['delete'] = (path, options) => {
-    if (typeof options !== 'object') {
-        options = {};
-    }
 
-    options.path   = path;
-    options.method = "DELETE";
-    return Client.request(options, null);
-};
+
+}
 
 module.exports = Client;
