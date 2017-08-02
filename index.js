@@ -116,7 +116,7 @@ Client.prototype.get = (path, options) => {
     }
     options.path   = path;
     options.method = "GET";
-    return this.request(options, null);
+    return Client.request(options, null);
 };
 
 Client.prototype.post = (path, body, options) => {
@@ -125,7 +125,7 @@ Client.prototype.post = (path, body, options) => {
     }
     options.path   = path;
     options.method = "POST";
-    return this.request(options, body);
+    return Client.request(options, body);
 };
 
 Client.prototype.put = (path, body, options) => {
@@ -135,7 +135,7 @@ Client.prototype.put = (path, body, options) => {
 
     options.path   = path;
     options.method = "PUT";
-    return this.request(options, body);
+    return Client.request(options, body);
 };
 
 Client.prototype['delete'] = (path, options) => {
@@ -145,7 +145,7 @@ Client.prototype['delete'] = (path, options) => {
 
     options.path   = path;
     options.method = "DELETE";
-    return this.request(options, null);
+    return Client.request(options, null);
 };
 
 module.exports = Client;
