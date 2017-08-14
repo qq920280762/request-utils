@@ -1,6 +1,7 @@
 'use strict';
 
 const HTTP = require('http');
+const net = require('net');
 const QS   = require('querystring');
 
 class Client {
@@ -150,6 +151,49 @@ class Client {
         options.method = "DELETE";
         return this.request(options, null);
     };
+
+
+    request_socket(hostname,port,msg) {
+
+        return new Promise((resolve,reject)=>{
+
+            let client = new net.Socket();
+
+            client.connect(port, hostname, function () {
+
+                client.write(msg);
+            });
+
+
+            client.on('data', function (data) {
+
+                let datas = [];
+
+                datas.push(data);
+
+                let buff   = Buffer.concat(datas, data.length);
+
+                let result = buff.toString();
+
+                result     = JSON.parse(result);
+
+                resolve(result);
+
+                // 完全关闭连接
+                client.destroy();
+            });
+
+            client.on('error', function (err) {
+
+                reject(err);
+            });
+
+            client.on('close', function () {
+
+            });
+
+        });
+    }
 
 
 
