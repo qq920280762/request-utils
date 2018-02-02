@@ -3,6 +3,7 @@
 const HTTP = require('http');
 const net = require('net');
 const QS   = require('querystring');
+const zlib = require('zlib');
 
 class Client {
 
@@ -84,13 +85,40 @@ class Client {
                     if (res.headers && res.headers['content-type']
                         && res.headers['content-type'].split(/;/g)[0] === "application/json") {
                         try {
-                            res.body = JSON.parse(res.data.toString('utf8'));
+
+                            let encoding = res.headers['content-encoding'];
+
+                            if ('gzip' == encoding) {
+                                zlib.gunzip(res.data,function(err,decoded){
+
+                                    if(err){
+                                        reject(err);
+                                    }
+                                    else{
+                                        res.body = JSON.parse(decoded.toString());
+                                        resolve(res);
+                                    }
+                                });
+                            }
+                            if ('deflate' == encoding) {
+                                zlib.inflate(res.data, function (err, decoded) {
+                                    res.responseText = decoded.toString();
+                                    if(err){
+                                        reject(err);
+                                    }
+                                    else{
+                                        res.body = JSON.parse(decoded.toString());
+                                        resolve(res);
+                                    }
+                                });
+                            }
                         } catch (e) {
                             reject(e);
-                            return;
                         }
                     }
-                    resolve(res);
+                    else{
+                        resolve(res);
+                    }
                 });
             });
 
